@@ -1,0 +1,193 @@
+libayatana-indicator (0.8.4-4) unstable; urgency=medium
+
+  * debian/{control,ayatana-indicator-common.*}:
+    + Drop bin:pkg ayatana-indicator-common. Now provided by libayatana-common.
+      (Closes: #993960).
+  * debian/control:
+    + Drop B-D dh-exec. Not needed anymore.
+    + Drop B-D systemd. Not needed anymore.
+  * debian/rules:
+    + Drop dh_install/dh_missing calls for ayatana-indicator-common.
+    + Make sure ayatana-indicators.target gets removed before dh_install.
+  * debian/copyright:
+    + Update copyright attributions.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 10 Nov 2021 15:17:17 +0100
+
+libayatana-indicator (0.8.4-3) unstable; urgency=medium
+
+  * debian/patches:
+    + Add 0002_src-indicator-ng.c-Make-sure-old-menu-item-name-is-n.patch.
+      Prevent regular crashes in indicator applets. (Closes: #992499).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 10 Nov 2021 13:39:08 +0100
+
+libayatana-indicator (0.8.4-2) unstable; urgency=medium
+
+  [ Martin Wimpress ]
+  * debian/patches:
+    + Add 0001_scale-icons-when-loading-from-filename.patch (LP: #1733301)
+
+  [ Mike Gabriel ]
+  * debian/patches:
+    + Fix file path in 0001_scale-icons-when-loading-from-filename.patch.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Tue, 19 Oct 2021 10:26:27 +0200
+
+libayatana-indicator (0.8.4-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Add 1001_build-tests-without-Werror.patch. Drop -Werror compiler flag
+      for unit tests.
+  * debian/control:
+    + Add B: (ayatana-indicator-common) to make sure, all indicators are update
+      to above 0.8.0.
+    + Add B-D at-spi2-core. Let unit tests that are wrapped by Xvfb and/or
+      dbus-wrapper succeed.
+  * debian/rules:
+    + Run unit tests after build.
+    + Don't run unit test parallely.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 03 Feb 2021 16:20:46 +0100
+
+libayatana-indicator (0.8.3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 09 Nov 2020 20:30:44 +0100
+
+libayatana-indicator (0.8.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Thu, 10 Sep 2020 22:08:29 +0200
+
+libayatana-indicator (0.8.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Drop 0001_Fix-IDO-insertion-index-in-Indicator-Messages-with-m.patch.
+      Applied upstream.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 26 Aug 2020 09:39:59 +0200
+
+libayatana-indicator (0.8.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Add 0001_Fix-IDO-insertion-index-in-Indicator-Messages-with-m.patch.
+      Fix IDO insertion index in Indicator Messages with multiple messagemenu
+      clients registered.
+  * debian/control:
+    + Update versioned B-D on libayatana-ido3-dev (>= 0.8.0).
+  * debian/libayatana-indicator3-7.symbols:
+    + Update symbols.
+  * debian/copyright:
+    + Update copyright attributions.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Tue, 18 Aug 2020 08:16:18 +0200
+
+libayatana-indicator (0.7.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 29 Jul 2020 23:38:09 +0200
+
+libayatana-indicator (0.7.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control:
+    + Bump Standards-Version: to 4.5.0. No changes needed.
+    + Bump DH compat level to version 13.
+  * debian/libayatana-indicator3-7.symbols:
+    + Update symbols.
+  * debian/copyright:
+    + Update copyright attributions.
+  * debian/rules:
+    + Drop LDFLAGS --as-needed addition. Default since bullseye release cycle.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 24 Jul 2020 06:50:32 +0200
+
+libayatana-indicator (0.6.3-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fixes gtk-2.0 build's FTBFS against glib2.0 (>= 2.62).
+      (Closes: #943877).
+  * debian/{control,compat}:
+    + Switch to debhelper-compat notation. Bump DH comat level to version 12.
+  * debian/control:
+    + Bump Standards-Version: 4.4.1. No changes needed.
+    + Add Rules-Requires-Root: field and set it to "no".
+  * debian/rules:
+    + Switch from dh_install --fail-missing to dh_missing --fail-missing.
+    + Drop '--with autoreconf' from DH call. It's the default since DH
+      compat level 12.
+  * debian/*.symbols:
+    + Add Build-Depends-Package: meta data fields.
+  * debian/libayatana-indicator3-tools.install:
+    + Tools are now installed to libexec dir.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 20 Nov 2019 14:30:19 +0100
+
+libayatana-indicator (0.6.2-3) unstable; urgency=medium
+
+  * debian/control:
+    + Drop D (libayatana-indicator3-dev) on libayatana-indicator-dev.
+      This caused build-envs to pull in the full GTK-2+ build stack when
+      only GTK-3+ was required. (Closes: #924879).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 18 Mar 2019 10:22:30 +0100
+
+libayatana-indicator (0.6.2-2) unstable; urgency=medium
+
+  * debian/control:
+    + Update Vcs-*: fields. Packaging Git has been migrated to salsa.debian.org.
+    + Use un-API-versioned B-D for libayatana-ido3-dev.
+    + Bump Standards-Version: to 4.2.0. No changes needed.
+  * debian/copyright:
+    + Update copyright attributions.
+  * debian/upstream/metadata:
+    + Add file. Comply with DEP-12.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Tue, 14 Aug 2018 19:06:59 +0200
+
+libayatana-indicator (0.6.2-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Type cast assignments from g_object_ref_sink().
+      (Closes: #893513).
+  * debian/control:
+    + Bump Standards-Version: to 4.1.3. No changes needed.
+  * debian/copyright:
+    + Use secure URI for copyright format reference.
+  * debian/watch:
+    + Use secure URL to obtain upstream sources.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Tue, 20 Mar 2018 10:51:28 +0100
+
+libayatana-indicator (0.6.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control:
+    + Make systemd a B-D only on [linux-any].
+    + Add B-D: dh-exec.
+    + Bump Standards-Version: to 4.1.0. No changes needed.
+  * debian/ayatana-indicators-common:
+    + Leave ayatana-indicators-commin bin:package empty on non-systemd
+      systems. Resolves FTBFS on Debian GNU/Hurd and Debian GNU/kFreeBSD.
+  * debian/{control,copyright,watch}:
+    + Update upstream URLs to new upstream project locations.
+  * debian/rules:
+    + Drop dh_install call for bin:pkg -plibayatana-indicator-tools. We don't
+      ship that anymore.
+
+  * Upload to unstable.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 22 Sep 2017 10:19:31 +0200
+
+libayatana-indicator (0.6.0-1) experimental; urgency=medium
+
+  * Initial release to Debian. (Closes: #863134).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 22 May 2017 15:19:30 +0200
