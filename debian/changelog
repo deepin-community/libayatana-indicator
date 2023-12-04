@@ -1,3 +1,51 @@
+libayatana-indicator (0.9.3-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/copyright:
+    + Update auto-generated copyright.in file.
+    + Update copyright attributions.
+  * debian/control:
+    + Bump Standards-Version: to 4.6.1. No changes needed.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 26 Oct 2022 00:25:25 +0200
+
+libayatana-indicator (0.9.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Drop 0001_src-CMakeLists.txt-indicator.symbols-Don-t-export-pr.patch.
+      Applied upstream.
+  * debian/copyright:
+    + Update copyright attributions.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 18 Feb 2022 11:47:52 +0100
+
+libayatana-indicator (0.9.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Drop all previous patches. All shipped upstream.
+    + Add 0001_src-CMakeLists.txt-indicator.symbols-Don-t-export-pr.patch. Don't
+      export private symbols.
+  * debian/:
+    + Adjust to upstream build system switch (autotools -> CMake).
+  * debian/control:
+    + Bump Standards-Version: to 4.6.0. No changes needed.
+    + Add missing dev:pkg dependency to libayatana-indicator3-dev:
+      libayatana-ido3-dev (>= 0.8.0).
+    + Enforce usage of version 0.9.0 of the Ayatana IDO library.
+  * debian/copyright:
+    + Update auto-generated copyright.in reference file.
+    + Update copyright attributions.
+  * debian/watch:
+    + Use format version 4.
+  * debian/rules:
+    + Install NEWS file as upstream ChangeLog.
+  * debian/upstream/metadata:
+    + Update points of contact, put UBports Foundation in Donation: field.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Thu, 18 Nov 2021 13:35:28 +0100
+
 libayatana-indicator (0.8.4-4) unstable; urgency=medium
 
   * debian/{control,ayatana-indicator-common.*}:

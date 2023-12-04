@@ -1,5 +1,6 @@
 /*
  * Copyright 2013 Canonical Ltd.
+ * Copyright 2021-2022 Robert Tari
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -15,6 +16,7 @@
  *
  * Authors:
  *     Lars Uebernickel <lars.uebernickel@canonical.com>
+ *     Robert Tari <robert@tari.in>
  */
 
 #include "indicator-ng.h"
@@ -39,9 +41,9 @@ struct _IndicatorNg
   gchar *secondary_action;
   gchar *submenu_action;
   gint position;
-
+  gchar *sTooltip;
   guint name_watch_id;
-
+  gboolean bMenuShown;
   GDBusConnection *session_bus;
   GActionGroup *actions;
   GMenuModel *menu;
@@ -199,7 +201,7 @@ indicator_ng_get_position (IndicatorObject *io)
 
 static void
 indicator_ng_entry_scrolled (IndicatorObject          *io,
-                             IndicatorObjectEntry     *entry,
+                             __attribute__((unused)) IndicatorObjectEntry     *entry,
                              gint                      delta,
                              IndicatorScrollDirection  direction)
 {
@@ -220,9 +222,9 @@ indicator_ng_entry_scrolled (IndicatorObject          *io,
 
 void
 indicator_ng_secondary_activate (IndicatorObject      *io,
-                                 IndicatorObjectEntry *entry,
-                                 guint                 timestamp,
-                                 gpointer              user_data)
+                                 __attribute__((unused)) IndicatorObjectEntry *entry,
+                                 __attribute__((unused)) guint                 timestamp,
+                                 __attribute__((unused)) gpointer              user_data)
 {
   IndicatorNg *self = INDICATOR_NG (io);
 
@@ -244,7 +246,7 @@ static gboolean indicator_ng_menu_insert_idos(IndicatorNg *self, GMenuModel *pSe
         GtkWidget *pMenuItemOld = GTK_WIDGET(g_list_nth_data(lMenuItems, nMenuItem));
         const gchar *sName = gtk_widget_get_name(pMenuItemOld);
 
-        if (!g_str_equal(sName, sType))
+        if (sName != NULL && !g_str_equal(sName, sType))
         {
             GActionGroup *pActionGroup = (GActionGroup*)g_object_get_qdata(G_OBJECT(self->entry.menu), m_pActionMuxer);
             GMenuItem *pMenuModelItem = g_menu_item_new_from_model(pSection, nModelItem);
@@ -284,7 +286,7 @@ static gboolean indicator_ng_menu_insert_idos(IndicatorNg *self, GMenuModel *pSe
     return bChanged;
 }
 
-static void indicator_ng_menu_size_allocate(GtkWidget *pWidget, GtkAllocation *pAllocation, gpointer pUserData)
+static void indicator_ng_menu_size_allocate(__attribute__((unused)) GtkWidget *pWidget, __attribute__((unused)) GtkAllocation *pAllocation, gpointer pUserData)
 {
     IndicatorNg *self = pUserData;
     GList *pMenuItem = gtk_container_get_children(GTK_CONTAINER(self->entry.menu));
@@ -303,7 +305,7 @@ static void indicator_ng_menu_size_allocate(GtkWidget *pWidget, GtkAllocation *p
         gint nHeightNat;
         gtk_widget_get_preferred_width(pMenuItem->data, NULL, &nWidthNat);
         gtk_widget_get_preferred_height(pMenuItem->data, NULL, &nHeightNat);
-        nWidth = MAX(nWidth, nWidthNat);
+        nWidth = MAX((gint)nWidth, nWidthNat);
         nHeight += nHeightNat;
         GtkBorder cPadding;
         GtkStyleContext *pContext = gtk_widget_get_style_context(GTK_WIDGET(pMenuItem->data));
@@ -327,12 +329,12 @@ static void indicator_ng_menu_size_allocate(GtkWidget *pWidget, GtkAllocation *p
     GdkMonitor *pMonitor = gdk_display_get_primary_monitor(pDisplay);
     gdk_monitor_get_workarea(pMonitor, &cRectangle);
 
-    if (nHeight <= cRectangle.height)
+    if ((gint)nHeight <= cRectangle.height)
     {
         gdk_window_move_resize(pWindowBin, 0, 0, nWidth, nHeight);
     }
 
-    nHeight = MIN(nHeight, cRectangle.height);
+    nHeight = MIN((gint)nHeight, cRectangle.height);
 
     GdkWindow *pWindow = gtk_widget_get_parent_window(GTK_WIDGET(self->entry.menu));
     gdk_window_resize(pWindow, nWidth, nHeight);
@@ -340,7 +342,7 @@ static void indicator_ng_menu_size_allocate(GtkWidget *pWidget, GtkAllocation *p
     gtk_menu_reposition(self->entry.menu);
 }
 
-static void indicator_ng_menu_section_changed(GMenuModel *pMenuSection, gint nPosition, gint nRemoved, gint nAdded, gpointer pUserData)
+static void indicator_ng_menu_section_changed(__attribute__((unused)) GMenuModel *pMenuSection, __attribute__((unused)) gint nPosition, __attribute__((unused)) gint nRemoved, __attribute__((unused)) gint nAdded, gpointer pUserData)
 {
     IndicatorNg *self = pUserData;
     GMenuModel *pModel = g_menu_model_get_item_link(self->menu, 0, G_MENU_LINK_SUBMENU);
@@ -421,10 +423,26 @@ static void indicator_ng_menu_section_changed(GMenuModel *pMenuSection, gint nPo
     }
 }
 
-static void indicator_ng_menu_shown(GtkWidget *pWidget, gpointer pUserData)
+static void indicator_ng_set_tooltip(IndicatorNg *self, gchar *sTooltip)
+{
+    if (self->entry.label != NULL)
+    {
+        gtk_widget_set_tooltip_text(GTK_WIDGET(self->entry.label), sTooltip);
+    }
+
+    if (self->entry.image != NULL)
+    {
+        gtk_widget_set_tooltip_text(GTK_WIDGET(self->entry.image), sTooltip);
+    }
+}
+
+static void indicator_ng_menu_shown(__attribute__((unused)) GtkWidget *pWidget, gpointer pUserData)
 {
     IndicatorNg *self = pUserData;
     guint nSectionCount = 0;
+    self->bMenuShown = TRUE;
+
+    indicator_ng_set_tooltip(self, NULL);
 
     if (!self->lMenuSections[0])
     {
@@ -434,7 +452,7 @@ static void indicator_ng_menu_shown(GtkWidget *pWidget, gpointer pUserData)
         {
             guint nSections = g_menu_model_get_n_items(self->lMenuSections[0]);
 
-            for (gint nSection = 0; nSection < nSections; nSection++)
+            for (guint nSection = 0; nSection < nSections; nSection++)
             {
                 self->lMenuSections[++nSectionCount] = g_menu_model_get_item_link(self->lMenuSections[0], nSection, G_MENU_LINK_SECTION);
 
@@ -468,14 +486,17 @@ static void indicator_ng_menu_shown(GtkWidget *pWidget, gpointer pUserData)
 }
 
 static void
-indicator_ng_menu_hidden (GtkWidget *widget,
+indicator_ng_menu_hidden (__attribute__((unused)) GtkWidget *widget,
                           gpointer   user_data)
 {
   IndicatorNg *self = user_data;
+  self->bMenuShown = FALSE;
 
   if (self->submenu_action)
     g_action_group_change_action_state (self->actions, self->submenu_action,
                                         g_variant_new_boolean (FALSE));
+
+  indicator_ng_set_tooltip(self, self->sTooltip);
 }
 
 static void
@@ -594,6 +615,7 @@ indicator_ng_update_entry (IndicatorNg *self)
       g_variant_lookup (state, "icon", "*", &icon);
       g_variant_lookup (state, "accessible-desc", "&s", &accessible_desc);
       g_variant_lookup (state, "visible", "b", &visible);
+      g_variant_lookup (state, "tooltip", "&s", &self->sTooltip);
     }
   else
     g_warning ("the action of the indicator menu item must have state with type (sssb) or a{sv}");
@@ -601,6 +623,7 @@ indicator_ng_update_entry (IndicatorNg *self)
   indicator_ng_set_label (self, label);
   indicator_ng_set_icon_from_variant (self, icon);
   indicator_ng_set_accessible_desc (self, accessible_desc);
+  indicator_ng_set_tooltip (self, self->bMenuShown ? NULL : self->sTooltip);
   indicator_object_set_visible (INDICATOR_OBJECT (self), visible);
 
   if (icon)
@@ -627,7 +650,7 @@ indicator_ng_menu_item_is_of_type (GMenuModel  *menu,
 }
 
 static void
-indicator_ng_menu_changed (GMenuModel *menu,
+indicator_ng_menu_changed (__attribute__((unused)) GMenuModel *menu,
                            gint        position,
                            gint        removed,
                            gint        added,
@@ -708,7 +731,7 @@ indicator_ng_menu_changed (GMenuModel *menu,
 
 static void
 indicator_ng_service_appeared (GDBusConnection *connection,
-                               const gchar     *name,
+                               __attribute__((unused)) const gchar     *name,
                                const gchar     *name_owner,
                                gpointer         user_data)
 {
@@ -775,8 +798,8 @@ indicator_ng_service_started (GObject      *source_object,
 }
 
 static void
-indicator_ng_service_vanished (GDBusConnection *connection,
-                               const gchar     *name,
+indicator_ng_service_vanished (__attribute__((unused)) GDBusConnection *connection,
+                               __attribute__((unused)) const gchar     *name,
                                gpointer         user_data)
 {
   IndicatorNg *self = user_data;
@@ -877,7 +900,7 @@ indicator_ng_load_from_keyfile (IndicatorNg  *self,
 
 static gboolean
 indicator_ng_initable_init (GInitable     *initable,
-                            GCancellable  *cancellable,
+                            __attribute__((unused)) GCancellable  *cancellable,
                             GError       **error)
 {
   IndicatorNg *self = INDICATOR_NG (initable);
@@ -954,6 +977,8 @@ indicator_ng_initable_iface_init (GInitableIface *initable)
 static void
 indicator_ng_init (IndicatorNg *self)
 {
+    self->sTooltip = NULL;
+    self->bMenuShown = FALSE;
     m_pActionMuxer = g_quark_from_static_string ("gtk-widget-action-muxer");
 
     for (guint nMenuSection = 0; nMenuSection < MENU_SECTIONS; nMenuSection++)
