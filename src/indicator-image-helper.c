@@ -79,13 +79,15 @@ refresh_image (GtkImage * image)
 		}
 		g_object_unref (pixbuf);
 	} else if (icon_filename != NULL) {
-		gtk_image_set_from_file(image, icon_filename);
-
-		gint height;
-		gdk_pixbuf_get_file_info(icon_filename, NULL, &height);
-
-		if (height > ICON_SIZE) {
-			gtk_image_set_pixel_size(image, ICON_SIZE);
+		GError* error = NULL;
+		GdkPixbuf* pixbuf = gdk_pixbuf_new_from_file_at_scale(icon_filename, ICON_SIZE, ICON_SIZE, TRUE, &error);
+		if (pixbuf != NULL) {
+			/* Put the pixbuf on the image */
+			gtk_image_set_from_pixbuf(image, pixbuf);
+			g_object_unref(G_OBJECT(pixbuf));
+		} else {
+			g_error_free(error);
+			gtk_image_set_from_icon_name(image, "image-missing", ICON_SIZE);
 		}
 	} else if (G_IS_LOADABLE_ICON(icon_names)) {
 		/* Build a pixbuf if needed */
@@ -136,7 +138,7 @@ refresh_image (GtkImage * image)
 /* Handles the theme changed signal to refresh the icon to make
    sure that it changes appropriately */
 static void
-theme_changed_cb (GtkIconTheme * theme, gpointer user_data)
+theme_changed_cb (__attribute__((unused)) GtkIconTheme * theme, gpointer user_data)
 {
 	GtkImage * image = GTK_IMAGE(user_data);
 	refresh_image(image);
@@ -146,7 +148,7 @@ theme_changed_cb (GtkIconTheme * theme, gpointer user_data)
 /* Removes the signal on the theme that was calling update on this
    image. */
 static void
-image_destroyed_cb (GtkImage * image, gpointer user_data)
+image_destroyed_cb (GtkImage * image, __attribute__((unused)) gpointer user_data)
 {
 	g_signal_handlers_disconnect_by_func(gtk_icon_theme_get_default(), theme_changed_cb, image);
 	return;
@@ -155,7 +157,7 @@ image_destroyed_cb (GtkImage * image, gpointer user_data)
 /* Catch the style changing on the image to make sure
    we've got the latest. */
 static void
-image_style_change_cb (GtkImage * image, GtkStyle * previous_style, gpointer user_data)
+image_style_change_cb (GtkImage * image, __attribute__((unused)) GtkStyle * previous_style, __attribute__((unused)) gpointer user_data)
 {
 	refresh_image(image);
 	return;
