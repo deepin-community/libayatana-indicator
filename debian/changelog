@@ -1,3 +1,10 @@
+libayatana-indicator (0.9.3-1deepin1) unstable; urgency=medium
+
+  * Add patch to fix tests with new at-spi2-core (Closes: #1113114) (LP:
+    #2124957)
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Fri, 09 Oct 2026 15:04:32 +0800
+
 libayatana-indicator (0.9.3-1) unstable; urgency=medium
 
   * New upstream release.
